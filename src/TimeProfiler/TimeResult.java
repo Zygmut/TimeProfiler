@@ -2,9 +2,11 @@ package TimeProfiler;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.OptionalDouble;
+import java.util.OptionalLong;
+import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
@@ -39,12 +41,13 @@ public class TimeResult {
      */
     public long sum(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
-                .mapToLong(timeStep).sum();
+                .mapToLong(timeStep)
+                .sum();
     }
 
     /**
      * Given a function that converts a Duration object to a long, returns the mean
-     * value of all the values
+     * value of all the values.
      * i.e:
      *
      * <pre>
@@ -56,29 +59,20 @@ public class TimeResult {
      * Would return the mean value in nanoseconds
      *
      * @param timeStep
-     * @return double
+     * @return OptionalDouble
      * @see ToLongFunction
      * @see Duration
      */
-    public double mean(ToLongFunction<? super Duration> timeStep) {
+    public OptionalDouble mean(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
                 .mapToLong(timeStep)
-                .average()
-                .getAsDouble();
-    }
-
-    /**
-     * Returns the amount of values of the current data
-     *
-     * @return int
-     */
-    public int length() {
-        return data.length;
+                .average();
     }
 
     /**
      * Given a function that converts a Duration object to a long, returns the
-     * minimum value. i.e:
+     * minimum value.
+     * i.e:
      *
      * <pre>
      * {@code
@@ -93,16 +87,17 @@ public class TimeResult {
      * @see ToLongFunction
      * @see Duration
      */
-    public long min(ToLongFunction<? super Duration> timeStep) {
+    public OptionalLong min(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
                 .mapToLong(timeStep)
-                .min()
-                .getAsLong();
+                .min();
     }
 
     /**
      * Given a function that converts a Duration object to a long, returns the
-     * maximum value. i.e:
+     * maximum value. If there were any complications in the calculations
+     * returns 0.
+     * i.e:
      *
      * <pre>
      * {@code
@@ -113,15 +108,14 @@ public class TimeResult {
      * Would return the maximum duration of them all in minutes
      *
      * @param timeStep
-     * @return long
+     * @return OptionalLong
      * @see ToLongFunction
      * @see Duration
      */
-    public long max(ToLongFunction<? super Duration> timeStep) {
+    public OptionalLong max(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
                 .mapToLong(timeStep)
-                .max()
-                .getAsLong();
+                .max();
     }
 
     /**
@@ -131,10 +125,9 @@ public class TimeResult {
      * @see TimeResult
      */
     public TimeResult sort() {
-        return new TimeResult(
-                (Duration[]) Arrays.stream(this.data)
-                        .sorted()
-                        .toArray());
+        return new TimeResult(Arrays.stream(this.data)
+                .sorted()
+                .toArray(Duration[]::new));
     }
 
     /**
@@ -156,11 +149,13 @@ public class TimeResult {
      * @see Duration
      */
     public long mode(ToLongFunction<? super Duration> timeStep) {
-        Map<Long, Integer> countMap = Arrays.stream(data)
-                .map(duration -> timeStep.applyAsLong(duration))
-                .collect(Collectors.toMap(key -> key, value -> 1, Integer::sum));
-        return countMap.entrySet().stream()
-                .max(Comparator.comparingInt(Map.Entry::getValue))
+        return Arrays.stream(data)
+                .mapToLong(timeStep)
+                .boxed()
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElseThrow(NoSuchElementException::new);
     }
@@ -211,8 +206,17 @@ public class TimeResult {
      */
     public String toString(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
-                .mapToLong(timeStep)
-                .mapToObj(String::valueOf)
+                .mapToLong(timeStep::applyAsLong)
+                .mapToObj(Long::toString)
                 .collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Returns the amount of values of the current data
+     *
+     * @return int
+     */
+    public int length() {
+        return data.length;
     }
 }

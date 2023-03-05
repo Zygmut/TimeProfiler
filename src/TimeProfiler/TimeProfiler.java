@@ -1,6 +1,7 @@
 package TimeProfiler;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -16,11 +17,11 @@ public class TimeProfiler {
 	 * @param function
 	 * @return Time of execution in nanoseconds
 	 */
-	private static long timeFunction(Runnable function) {
-		long startingNanoSeconds = System.nanoTime();
+	private static Duration timeFunction(Runnable function) {
+		Instant startTime = Instant.now();
 		function.run();
-		long endingNanoSeconds = System.nanoTime();
-		return (endingNanoSeconds - startingNanoSeconds);
+		Instant endTime = Instant.now();
+		return Duration.between(startTime, endTime);
 	}
 
 	/**
@@ -32,10 +33,7 @@ public class TimeProfiler {
 	 * @see TimeResult
 	 */
 	public static TimeResult timeIt(Runnable function) {
-		if (function == null) {
-			throw new NullPointerException("Functions cannot be null");
-		}
-		return new TimeResult(new Duration[] { Duration.ofNanos(timeFunction(function)) });
+		return new TimeResult(new Duration[] { timeFunction(function) });
 	}
 
 	/**
@@ -50,16 +48,13 @@ public class TimeProfiler {
 	 * @see TimeResult
 	 */
 	public static TimeResult batchTimeIt(Runnable function, int batchSize) {
-		if (function == null) {
-			throw new NullPointerException("Functions cannot be null");
-		}
 		if (batchSize <= 0) {
 			return new TimeResult(EMPTY_DURATION_ARRAY);
 		}
 
-		return new TimeResult(LongStream.generate(() -> timeFunction(function))
-				.limit(batchSize)
-				.mapToObj(Duration::ofNanos)
+		return new TimeResult(LongStream.range(0, batchSize)
+				.parallel()
+				.mapToObj(i -> timeFunction(function))
 				.toArray(Duration[]::new));
 	}
 
@@ -72,12 +67,9 @@ public class TimeProfiler {
 	 * @see TimeResult
 	 */
 	public static TimeResult timeIt(Runnable[] functions) {
-		if (functions == null) {
-			throw new NullPointerException("Functions cannot be null");
-		}
-		return new TimeResult(LongStream.rangeClosed(0, functions.length - 1)
-				.map((x) -> timeFunction(functions[(int) x]))
-				.mapToObj(Duration::ofNanos)
+		return new TimeResult(Arrays.stream(functions)
+				.parallel()
+				.map(TimeProfiler::timeFunction)
 				.toArray(Duration[]::new));
 	}
 
@@ -93,10 +85,6 @@ public class TimeProfiler {
 	 * @see TimeResult
 	 */
 	public static TimeResult[] batchTimeIt(Runnable[] functions, int batchSize) {
-		if (functions == null) {
-			throw new NullPointerException("Functions cannot be null");
-		}
-
 		if (batchSize <= 0) {
 			return Stream.generate(() -> new TimeResult(EMPTY_DURATION_ARRAY))
 					.limit(functions.length)
@@ -104,12 +92,10 @@ public class TimeProfiler {
 		}
 
 		return Arrays.stream(functions)
+				.parallel()
 				.map(function -> {
-					return new TimeResult(Arrays.stream(
-							LongStream.generate(() -> timeFunction(function))
-									.limit(batchSize)
-									.toArray())
-							.mapToObj(Duration::ofNanos)
+					return new TimeResult(LongStream.range(0, batchSize)
+							.mapToObj(i -> timeFunction(function))
 							.toArray(Duration[]::new));
 				})
 				.toArray(TimeResult[]::new);
