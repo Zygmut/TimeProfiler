@@ -4,26 +4,33 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.OptionalDouble;
-import java.util.OptionalLong;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
 public class TimeResult {
-    private Duration[] data;
+    private final Duration[] data;
 
     public TimeResult(Duration[] data) {
+        if (data.length == 0) {
+            throw new IllegalArgumentException("Data array cannot be empty.");
+        }
         this.data = data;
     }
 
+    /**
+     * Returns the array of durations contained in this object
+     *
+     * @return an array of durations
+     */
     public Duration[] getData() {
         return data;
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns the sum
-     * of all the values
+     * Calculates the sum of the durations as a long value computed by the given
+     * timestep
+     * function
      * i.e:
      *
      * <pre>
@@ -34,8 +41,9 @@ public class TimeResult {
      *
      * Would return the sum of all the values in milliseconds
      *
-     * @param timeStep ToLongFunction
-     * @return long
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return The sum of the data as a long value
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
@@ -46,8 +54,10 @@ public class TimeResult {
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns the mean
-     * value of all the values.
+     * Calculates the mean value of the durations as a double value computed by the
+     * given
+     * timestep
+     * function.
      * i.e:
      *
      * <pre>
@@ -58,20 +68,23 @@ public class TimeResult {
      *
      * Would return the mean value in nanoseconds
      *
-     * @param timeStep
-     * @return OptionalDouble
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return The mean of the data as a double value
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
-    public OptionalDouble mean(ToLongFunction<? super Duration> timeStep) {
+    public double mean(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
                 .mapToLong(timeStep)
-                .average();
+                .average()
+                .getAsDouble();
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns the
-     * minimum value.
+     * Calculates the minimum value among the durations values represented by the
+     * array,
+     * as computed by the given timeStep function.
      * i.e:
      *
      * <pre>
@@ -82,21 +95,23 @@ public class TimeResult {
      *
      * Would return the minimum duration of them all in seconds
      *
-     * @param timeStep
-     * @return long
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return The minimum value among the durations in long
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
-    public OptionalLong min(ToLongFunction<? super Duration> timeStep) {
+    public long min(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
                 .mapToLong(timeStep)
-                .min();
+                .min()
+                .getAsLong();
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns the
-     * maximum value. If there were any complications in the calculations
-     * returns 0.
+     * Calculates the maximum value among the durations values represented by the
+     * array,
+     * as computed by the given timeStep function.
      * i.e:
      *
      * <pre>
@@ -107,33 +122,34 @@ public class TimeResult {
      *
      * Would return the maximum duration of them all in minutes
      *
-     * @param timeStep
-     * @return OptionalLong
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return The maximum value among the durations in long
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
-    public OptionalLong max(ToLongFunction<? super Duration> timeStep) {
+    public long max(ToLongFunction<? super Duration> timeStep) {
         return Arrays.stream(this.data)
                 .mapToLong(timeStep)
-                .max();
+                .max()
+                .getAsLong();
     }
 
     /**
-     * Returns a copy of the data that has been sorted
+     * Returns a copy of the data within this object sorted in ascending order
      *
-     * @return TimeResult
-     * @see TimeResult
+     * @return and array of durations sorted in ascending order
+     * @see Duration
      */
-    public TimeResult sort() {
-        return new TimeResult(Arrays.stream(this.data)
+    public Duration[] sort() {
+        return Arrays.stream(this.data)
                 .sorted()
-                .toArray(Duration[]::new));
+                .toArray(Duration[]::new);
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns the
-     * mode. If no mode was found returns the max value. It's time complexity
-     * is O(n) i.e:
+     * Calculates the mode of the data array as computed by the
+     * given timeStep function. It's time complexity is O(n) i.e:
      *
      * <pre>
      * {@code
@@ -143,8 +159,9 @@ public class TimeResult {
      *
      * Would return the maximum duration of them all in minutes
      *
-     * @param timeStep
-     * @return long
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return the mode value as a long
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
@@ -161,8 +178,8 @@ public class TimeResult {
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns the
-     * median. i.e:
+     * Calculates the median of the data array as computed by the given timeStep
+     * function. i.e:
      *
      * <pre>
      * {@code
@@ -172,8 +189,9 @@ public class TimeResult {
      *
      * Would return the median duration of them all in hours
      *
-     * @param timeStep
-     * @return long
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return the median value as a long
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
@@ -188,9 +206,7 @@ public class TimeResult {
     }
 
     /**
-     * Given a function that converts a Duration object to a long, returns a String
-     * with all the values parsed. i.e
-     *
+     * Returns a String representation of the data array as computed by the given timeStep function. i.e:
      * <pre>
      * {@code
      * TimeProfiler.batchTimeIt(this::fn, 10).toString(Duration::toDays);
@@ -199,8 +215,9 @@ public class TimeResult {
      *
      * Would return a String with all the data parsed to days
      *
-     * @param timeStep ToLongFunction
-     * @return String
+     * @param timeStep a function that extracts a long value from a Duration object
+     * @return a String representation of the data array within the object
+     * @throws NullPointerException if the timeStep function is null
      * @see ToLongFunction
      * @see Duration
      */
@@ -212,9 +229,9 @@ public class TimeResult {
     }
 
     /**
-     * Returns the amount of values of the current data
+     * Returns the amount of values of the current data within the object
      *
-     * @return int
+     * @return the amount of values of the current data within the object
      */
     public int length() {
         return data.length;
