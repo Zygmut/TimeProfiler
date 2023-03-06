@@ -1,18 +1,7 @@
 # Time Profiler
 
-Java library that provides a set of methods to profile the execution time of a given function or an array of functions
+Introducing TimeProfiler - a Java package that simplifies timing the execution of functions. With TimeProfiler, you can easily measure the time it takes to run a single function, multiple functions, or a single function multiple times. 
 
-## Folder Structure
+The package provides four methods: timeIt, batchTimeIt, timeIt for an array of functions, and batchTimeIt for an array of functions. Simply pass in the function(s) and the desired batch size, and TimeProfiler will return the duration(s) of execution. The package uses Java's Instant and Duration classes to accurately measure time. 
 
-The workspace contains two folders by default, where:
-
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
-
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
-
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+Try out TimeProfiler today and optimize your code!
