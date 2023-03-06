@@ -8,14 +8,13 @@ import java.util.stream.Stream;
 
 public class TimeProfiler {
 
-	private static final Duration[] EMPTY_DURATION_ARRAY = { Duration.ZERO };
-
 	/**
 	 * Given a runnable function, retuns the time that was spent executing that
 	 * function
 	 *
-	 * @param function
-	 * @return Time of execution in nanoseconds
+	 * @param function to time
+	 * @return Time of execution
+	 * @see Duration
 	 */
 	private static Duration timeFunction(Runnable function) {
 		Instant startTime = Instant.now();
@@ -28,8 +27,8 @@ public class TimeProfiler {
 	 * Given a runnable function returns a TimeResult object with the time that was
 	 * spent running that function.
 	 *
-	 * @param function
-	 * @return TimeResult
+	 * @param function to time
+	 * @return TimeResult with the duration of the execution
 	 * @see TimeResult
 	 */
 	public static TimeResult timeIt(Runnable function) {
@@ -42,14 +41,15 @@ public class TimeProfiler {
 	 * executed is defined by batchSize. If batchSize is <= 0, returns a Duration of
 	 * 0.
 	 *
-	 * @param function
+	 * @param function to run
 	 * @param batchSize Amount of times that the function will be executed
-	 * @return TimeResult
+	 * @throws IllegalArgumentException if batchSize <= 0
+	 * @return TimeResult with the durations of each execution
 	 * @see TimeResult
 	 */
 	public static TimeResult batchTimeIt(Runnable function, int batchSize) {
 		if (batchSize <= 0) {
-			return new TimeResult(EMPTY_DURATION_ARRAY);
+			throw new IllegalArgumentException("batchSize must be > 0");
 		}
 
 		return new TimeResult(LongStream.range(0, batchSize)
@@ -62,8 +62,8 @@ public class TimeProfiler {
 	 * Given a runnable array of functions returns a TimeResult array object with
 	 * the time that was spent running each one of those functions.
 	 *
-	 * @param functions
-	 * @return TimeResult
+	 * @param functions to run
+	 * @return TimeResult with the durations of each execution
 	 * @see TimeResult
 	 */
 	public static TimeResult timeIt(Runnable[] functions) {
@@ -79,16 +79,15 @@ public class TimeProfiler {
 	 * function is executed is defined by batchSize. If batchSize is <= 0, returns a
 	 * Duration of 0.
 	 *
-	 * @param functions
-	 * @param batchSize
-	 * @return TimeResult[]
+	 * @param functions to run
+	 * @param batchSize Amount of times that each function will be executed
+	 * @throws IllegalArgumentException if batchSize <= 0
+	 * @return TimeResult[] with all the durations of each execution per function
 	 * @see TimeResult
 	 */
 	public static TimeResult[] batchTimeIt(Runnable[] functions, int batchSize) {
 		if (batchSize <= 0) {
-			return Stream.generate(() -> new TimeResult(EMPTY_DURATION_ARRAY))
-					.limit(functions.length)
-					.toArray(TimeResult[]::new);
+			throw new IllegalArgumentException("batchSize must be > 0");
 		}
 
 		return Arrays.stream(functions)
